@@ -1,0 +1,21 @@
+[package]
+name = "cracha-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "Typed AccessPolicy IR for crachá — the authorization primitive of saguão"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+thiserror.workspace = true
+schemars.workspace = true
+kube = { workspace = true, features = ["derive"] }
+k8s-openapi.workspace = true
+
+[lints]
+workspace = true

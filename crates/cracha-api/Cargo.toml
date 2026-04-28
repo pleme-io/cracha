@@ -1,0 +1,36 @@
+[package]
+name = "cracha-api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "gRPC + REST authz API for crachá"
+
+[[bin]]
+name = "cracha-api"
+path = "src/main.rs"
+
+[dependencies]
+cracha-core.workspace = true
+cracha-proto.workspace = true
+cracha-controller = { path = "../cracha-controller", version = "0.1.0" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+http.workspace = true
+tonic.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+prometheus.workspace = true
+clap.workspace = true
+futures = "0.3"
+kube = { workspace = true, features = ["client", "rustls-tls"] }
+
+[lints]
+workspace = true

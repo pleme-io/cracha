@@ -1,0 +1,27 @@
+apiVersion: v2
+name: lareira-cracha
+description: |
+  crachá — fleet-wide typed authorization for saguão.
+  Deploys the cracha-controller (kube-rs reconciler) + cracha-api
+  (gRPC + REST authz API) to the control-plane cluster. Hostname:
+  cracha.quero.cloud, gated by passaporte (Authentik forward-auth)
+  via pleme-lib.compliance.authn.oidc.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/pleme-io/cracha
+sources:
+  - https://github.com/pleme-io/cracha
+maintainers:
+  - name: pleme-io
+    email: ops@pleme.io
+keywords:
+  - saguao
+  - authz
+  - oidc
+  - access-policy
+  - homelab
+dependencies:
+  - name: pleme-lib
+    version: "0.1.x"
+    repository: oci://ghcr.io/pleme-io/charts

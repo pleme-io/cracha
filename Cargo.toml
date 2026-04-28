@@ -1,0 +1,63 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/cracha-core",
+    "crates/cracha-proto",
+    "crates/cracha-controller",
+    "crates/cracha-api",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89.0"
+license = "MIT"
+repository = "https://github.com/pleme-io/cracha"
+authors = ["pleme-io <ops@pleme.io>"]
+
+[workspace.dependencies]
+# Local crates
+cracha-core  = { path = "crates/cracha-core",  version = "0.1.0" }
+cracha-proto = { path = "crates/cracha-proto", version = "0.1.0" }
+
+# Serialization / errors
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+thiserror = "2"
+anyhow = "1"
+
+# Async / web
+tokio = { version = "1", features = ["full"] }
+axum = "0.8"
+tonic = "0.13"
+tower = "0.5"
+http = "1"
+
+# K8s — workspace dep is feature-less; each crate enables what it needs.
+kube = { version = "0.99", default-features = false }
+k8s-openapi = { version = "0.24", features = ["v1_31"] }
+schemars = "0.8"
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+prometheus = "0.13"
+
+# Config / CLI
+clap = { version = "4", features = ["derive", "env"] }
+
+# Identity helpers (saguão's identity primitive — feature-gate to avoid forcing the dep at scaffold time)
+# kenshou = { git = "https://github.com/pleme-io/kenshou", optional = true }
+
+# tatara-lisp (typed authoring) — feature-gate while the integration is in progress
+# tatara-lisp-derive = { git = "https://github.com/pleme-io/tatara-lisp" }
+
+[workspace.lints.clippy]
+pedantic = "warn"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "z"
+strip = true

@@ -1,0 +1,32 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: {{ include "lareira-cracha.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lareira-cracha.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: cracha
+      interval: 1m
+      rules:
+        - alert: CrachaApiDown
+          expr: up{job=~".*cracha.*"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            saguao_component: cracha
+          annotations:
+            summary: "crachá API is down ({{ "{{" }} $labels.instance {{ "}}" }})"
+            runbook_url: "https://github.com/pleme-io/theory/blob/main/SAGUAO.md#vi3-failure-modes-and-mitigations"
+        - alert: CrachaIndexEmpty
+          expr: cracha_policy_count == 0
+          for: 10m
+          labels:
+            severity: warning
+            saguao_component: cracha
+          annotations:
+            summary: "crachá has no policies indexed"
+            description: "The crachá-controller hasn't observed any AccessPolicy CRDs. Either none are deployed or the controller has lost cluster connectivity."
+{{- end }}

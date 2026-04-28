@@ -1,0 +1,74 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: servicecatalogs.saguao.pleme.io
+spec:
+  group: saguao.pleme.io
+  names:
+    kind: ServiceCatalog
+    listKind: ServiceCatalogList
+    plural: servicecatalogs
+    singular: servicecatalog
+    shortNames: [scat]
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                clusters:
+                  type: array
+                  items:
+                    type: object
+                    required: [name, location]
+                    properties:
+                      name: { type: string }
+                      location: { type: string }
+                      label: { type: string }
+                services:
+                  type: array
+                  items:
+                    type: object
+                    required: [slug, displayName, cluster]
+                    properties:
+                      slug: { type: string }
+                      displayName: { type: string }
+                      cluster: { type: string }
+                      icon: { type: string }
+                      description: { type: string }
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: accessgroups.saguao.pleme.io
+spec:
+  group: saguao.pleme.io
+  names:
+    kind: AccessGroup
+    listKind: AccessGroupList
+    plural: accessgroups
+    singular: accessgroup
+    shortNames: [agrp]
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [name, members]
+              properties:
+                name: { type: string }
+                members:
+                  type: array
+                  items: { type: string }

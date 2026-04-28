@@ -1,0 +1,55 @@
+# lareira-cracha values
+#
+# Sane defaults for the saguão control-plane cluster (today: rio).
+# Each consumer cluster's HelmRelease overrides .image.tag, .resources,
+# and the ingress hostname.
+
+enabled: true
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/pleme-io/cracha
+  tag: ""                   # default to chart appVersion
+  pullPolicy: IfNotPresent
+
+# cracha-controller + cracha-api co-deployed in one Pod, share the
+# in-memory authz index via Arc<RwLock<...>>. Single replica is
+# acceptable — the index rebuilds from the live cluster state on
+# restart; the data plane (vigia) caches decisions for 5 minutes.
+replicas: 1
+
+logLevel: "info"
+
+serviceAccount:
+  create: true
+  name: ""
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+ingress:
+  enabled: true
+  className: nginx
+  hostname: cracha.quero.cloud
+
+cloudflared:
+  expose: true
+  hostname: cracha.quero.cloud
+
+# Saguão self-reference: crachá is gated by passaporte.
+compliance:
+  authn:
+    oidc:
+      provider: authentik
+      group: operators
+
+serviceMonitor:
+  enabled: true
+  interval: 30s

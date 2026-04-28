@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "lareira-cracha.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lareira-cracha.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "lareira-cracha.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: grpc
+      port: 50051
+      targetPort: grpc
+    - name: metrics
+      port: 9100
+      targetPort: metrics

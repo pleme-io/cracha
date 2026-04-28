@@ -1,0 +1,67 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: accesspolicies.saguao.pleme.io
+spec:
+  group: saguao.pleme.io
+  names:
+    kind: AccessPolicy
+    listKind: AccessPolicyList
+    plural: accesspolicies
+    singular: accesspolicy
+    shortNames: [apol]
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [name, members, grants]
+              properties:
+                name:
+                  type: string
+                  description: Logical name of the policy (e.g., "family").
+                members:
+                  type: array
+                  items:
+                    type: string
+                  description: User identifiers (email or sub-claim) included in this policy.
+                grants:
+                  type: array
+                  items:
+                    type: object
+                    required: [user]
+                    properties:
+                      user:
+                        type: string
+                      locations:
+                        type: array
+                        items: { type: string }
+                      clusters:
+                        type: array
+                        items: { type: string }
+                      services:
+                        type: array
+                        items: { type: string }
+                      verbs:
+                        type: array
+                        items:
+                          type: string
+                          enum: [read, write, delete, admin, "*"]
+      additionalPrinterColumns:
+        - name: Members
+          type: integer
+          jsonPath: .spec.members
+          description: Number of members in this policy
+        - name: Grants
+          type: integer
+          jsonPath: .spec.grants
+          description: Number of grants
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

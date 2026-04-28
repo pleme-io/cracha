@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+// crachá — typed authorization gRPC service for the saguão fleet.
+//
+// Consumed by vigia (per-cluster forward-auth) on every gated HTTP
+// request. Served by cracha-api on the control-plane cluster.
+
+package saguao.cracha.v1;
+
+service Cracha {
+  // Authorize a single request. Pure function over the in-memory
+  // authz index; sub-millisecond latency target.
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+
+  // Health probe — used by vigia and by K8s liveness/readiness.
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+message AuthorizeRequest {
+  // OIDC sub claim (or email if sub unavailable).
+  string user = 1;
+  // Cluster the request is bound for (e.g., "rio").
+  string cluster = 2;
+  // Location of the cluster (e.g., "bristol"). Redundant with the
+  // service catalog but included so vigia can short-circuit on
+  // catalog drift.
+  string location = 3;
+  // Service slug (e.g., "vault").
+  string service = 4;
+  // Verb — encoded as a string ("read"/"write"/"delete"/"admin"/"*").
+  // Must match cracha_core::policy::Verb's serde repr.
+  string verb = 5;
+}
+
+message AuthorizeResponse {
+  bool allow = 1;
+  // Name of the AccessPolicy that matched (empty if denied).
+  string matched_policy = 2;
+  // Human-readable reason, surfaced in vigia's audit log.
+  string reason = 3;
+}
+
+message HealthRequest {}
+message HealthResponse {
+  bool healthy = 1;
+  // Number of distinct policies currently indexed.
+  uint32 policy_count = 2;
+}
