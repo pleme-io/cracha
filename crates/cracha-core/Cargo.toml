@@ -17,5 +17,16 @@ schemars.workspace = true
 kube = { workspace = true, features = ["derive"] }
 k8s-openapi.workspace = true
 
+# tatara-lisp authoring surface — feature-gated so wasm consumers
+# (varanda) skip the proc-macro dep tree.
+tatara-lisp = { git = "https://github.com/pleme-io/tatara", optional = true }
+tatara-lisp-derive = { git = "https://github.com/pleme-io/tatara", optional = true }
+
+[features]
+default = []
+# Enables `#[derive(TataraDomain)]` on AccessPolicySpec etc., so they
+# can be authored as `(defcrachá …)` Lisp forms.
+tatara-lisp = ["dep:tatara-lisp", "dep:tatara-lisp-derive"]
+
 [lints]
 workspace = true

@@ -23,3 +23,13 @@ pub use evaluator::{AccessibleService, AuthzIndex, AuthzRequest, Decision, Decis
 pub use policy::{
     AccessGroup, AccessGroupSpec, AccessPolicy, AccessPolicySpec, CrachaError, Grant, UserId, Verb,
 };
+
+/// Register crachá's typed Lisp surfaces with the global tatara-lisp
+/// dispatcher. Call once at process start in cracha-controller /
+/// cracha-api so `(defcrachá …)` and `(defaccessgroup …)` forms parse
+/// against the typed IR.
+#[cfg(feature = "tatara-lisp")]
+pub fn register_lisp_surfaces() {
+    tatara_lisp::domain::register::<AccessPolicySpec>();
+    tatara_lisp::domain::register::<AccessGroupSpec>();
+}

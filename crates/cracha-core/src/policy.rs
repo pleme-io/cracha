@@ -4,6 +4,9 @@ use kube::CustomResource;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "tatara-lisp")]
+use tatara_lisp_derive::TataraDomain;
+
 /// A user identifier — typically the OIDC `sub` or email claim.
 pub type UserId = String;
 
@@ -82,6 +85,8 @@ pub struct Grant {
 #[derive(
     Debug, Clone, Serialize, Deserialize, JsonSchema, CustomResource, PartialEq, Eq,
 )]
+#[cfg_attr(feature = "tatara-lisp", derive(TataraDomain))]
+#[cfg_attr(feature = "tatara-lisp", tatara(keyword = "defcracha"))]
 #[kube(
     group = "saguao.pleme.io",
     version = "v1alpha1",
@@ -111,6 +116,8 @@ pub struct AccessPolicySpec {
 #[derive(
     Debug, Clone, Serialize, Deserialize, JsonSchema, CustomResource, PartialEq, Eq,
 )]
+#[cfg_attr(feature = "tatara-lisp", derive(TataraDomain))]
+#[cfg_attr(feature = "tatara-lisp", tatara(keyword = "defaccessgroup"))]
 #[kube(
     group = "saguao.pleme.io",
     version = "v1alpha1",
