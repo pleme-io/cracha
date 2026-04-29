@@ -11,7 +11,7 @@
 use std::sync::Arc;
 
 use clap::Parser;
-use cracha_controller::{new_shared_index, reconcile, Context};
+use cracha_controller::{helmrelease, new_shared_index, reconcile, Context, HelmContext};
 use kube::Client;
 use tracing::info;
 
@@ -32,8 +32,21 @@ async fn main() -> anyhow::Result<()> {
 
     let client = Client::try_default().await?;
     let index = new_shared_index();
-    let ctx = Arc::new(Context { client, index });
+    let ctx = Arc::new(Context {
+        client: client.clone(),
+        index: index.clone(),
+    });
+    let helm_ctx = Arc::new(HelmContext {
+        client,
+        index,
+    });
 
+    // Spawn the HelmRelease watcher in parallel with the
+    // AccessPolicy + ServiceCatalog reconcilers.
+    let helm_handle = tokio::spawn(async move {
+        helmrelease::run(helm_ctx).await;
+    });
     reconcile::run(ctx).await;
+    let _ = helm_handle.await;
     Ok(())
 }

@@ -421,6 +421,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "cracha-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "cracha-core",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tatara-lisp",
+ "tatara-lisp-derive",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "cracha-controller"
 version = "0.1.0"
 dependencies = [

@@ -5,6 +5,7 @@ members = [
     "crates/cracha-proto",
     "crates/cracha-controller",
     "crates/cracha-api",
+    "crates/cracha-cli",
 ]
 
 [workspace.package]
