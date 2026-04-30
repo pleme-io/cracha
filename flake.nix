@@ -18,30 +18,61 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.fenix.follows = "fenix";
     };
+    forge = {
+      url = "github:pleme-io/forge";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.fenix.follows = "fenix";
+      inputs.substrate.follows = "substrate";
+      inputs.crate2nix.follows = "crate2nix";
+    };
     devenv = {
       url = "github:cachix/devenv";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = {
+  outputs = inputs@{
     self,
     nixpkgs,
     crate2nix,
     flake-utils,
     substrate,
+    forge,
     devenv,
     ...
   }:
-    # Workspace builder — multi-crate, multi-binary release.
-    # cracha-controller is the kube-rs reconciler; cracha-api is the gRPC + REST API.
-    # Both binaries are built from the same workspace.
-    (import "${substrate}/lib/rust-workspace-release-flake.nix" {
-      inherit nixpkgs crate2nix flake-utils devenv;
+    # Service-flake builder — single binary `cracha-api`, packaged as
+    # an OCI image and pushed to ghcr.io/pleme-io/cracha. The
+    # cracha-api process spawns cracha-controller's reconciler
+    # in-process via tokio::spawn, so one image covers both
+    # surfaces (REST/gRPC API + CRD reconciler). The
+    # cracha-cli binary still ships as a GitHub-release artifact via
+    # the workspace's separate cargo build, but the cluster runtime
+    # only needs cracha-api.
+    (import "${substrate}/lib/build/rust/service-flake.nix" {
+      inherit nixpkgs substrate forge crate2nix;
     }) {
-      toolName = "cracha";
-      packageName = "cracha-controller";  # primary binary; api built alongside
-      src = self;
-      repo = "pleme-io/cracha";
+      inherit self;
+      serviceName = "cracha";
+      registry = "ghcr.io/pleme-io/cracha";
+      packageName = "cracha-api";
+      moduleDir = null;
+      nixosModuleFile = null;
+      # Image needs nothing extra — cracha-api links statically against
+      # all its deps (sea-orm, axum, jsonwebtoken). A future enrichment
+      # (e.g. tini for PID 1, ca-certificates for outbound HTTPS to
+      # passaporte's JWKS) can be added here.
+      extraContents = pkgs: with pkgs; [ cacert ];
+      # cracha-proto's build.rs invokes tonic-build, which shells out
+      # to protoc. The default crate2nix override adds protobuf to
+      # tonic-build's OWN build inputs but not to consumer crates;
+      # cracha-proto needs it on its OWN nativeBuildInputs so the
+      # build script finds protoc on PATH at compile time.
+      crateOverrides = {
+        cracha-proto = oldAttrs: {
+          nativeBuildInputs = (oldAttrs.nativeBuildInputs or [])
+            ++ (with (import nixpkgs { system = "x86_64-linux"; }); [ protobuf ]);
+        };
+      };
     };
 }
