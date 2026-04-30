@@ -18,6 +18,10 @@ spec:
         {{- include "lareira-cracha.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "lareira-cracha.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       securityContext:
         runAsNonRoot: true
         seccompProfile:

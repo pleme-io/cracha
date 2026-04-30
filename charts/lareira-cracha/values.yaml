@@ -14,6 +14,13 @@ image:
   tag: ""                   # default to chart appVersion
   pullPolicy: IfNotPresent
 
+# Pod imagePullSecrets — list of {name: <secret-in-same-namespace>}.
+# Required when pulling private pleme-io images from ghcr.io (the
+# package is private; anonymous pulls return 401). Override per
+# deployment with `[{name: ghcr-pull}]` and create the corresponding
+# dockerconfigjson Secret in the target namespace.
+imagePullSecrets: []
+
 # cracha-controller + cracha-api co-deployed in one Pod, share the
 # in-memory authz index via Arc<RwLock<...>>. Single replica is
 # acceptable — the index rebuilds from the live cluster state on

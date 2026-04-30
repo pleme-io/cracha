@@ -7,7 +7,7 @@ description: |
   cracha.quero.cloud, gated by passaporte (Authentik forward-auth)
   via pleme-lib.compliance.authn.oidc.
 type: application
-version: 0.2.0
+version: 0.2.1
 appVersion: "0.2.0"
 home: https://github.com/pleme-io/cracha
 sources:
