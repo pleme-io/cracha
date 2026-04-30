@@ -34,6 +34,23 @@ resources:
     cpu: "500m"
     memory: "512Mi"
 
+# Postgres connection — points at a SOPS-encrypted Secret containing
+# the libpq URL under `database-url` by default. Override at the
+# HelmRelease level to point at any cluster's CNPG instance. Required
+# at runtime; cracha-api refuses to start without it.
+database:
+  secretName: cracha-db
+  secretKey: database-url
+
+# Admin allowlist — comma-separated lowercase emails. Users whose
+# Google login email matches one of these get the admin role on every
+# login. Promotion/demotion = edit this string and reconcile; never a
+# runtime mutation.
+adminEmails: ""
+
+# Extra env vars passed verbatim to the cracha-api container.
+extraEnv: []
+
 ingress:
   enabled: true
   className: nginx

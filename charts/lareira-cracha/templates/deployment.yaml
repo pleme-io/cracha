@@ -34,6 +34,24 @@ spec:
               value: "0.0.0.0:50051"
             - name: RUST_LOG
               value: "{{ .Values.logLevel }}"
+            # Postgres connection — sourced from the SOPS-encrypted
+            # database Secret. Defaults assume CNPG (pleme-database)
+            # in the same cluster; consumers can override secret name
+            # / keys per-deployment.
+            - name: CRACHA_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName | quote }}
+                  key: {{ .Values.database.secretKey | quote }}
+            # Admin allowlist — declarative source of truth for who
+            # gets the admin role on first login. Comma-separated,
+            # lowercase comparison. shikumi-loaded in production via
+            # an extraEnv override; the chart default is empty.
+            - name: CRACHA_ADMIN_EMAILS
+              value: {{ .Values.adminEmails | default "" | quote }}
+          {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 8080
