@@ -1,0 +1,30 @@
+[package]
+name = "cracha-storage"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+description = "crachá Postgres-backed identity registry: users, user_grants, audit_log."
+
+[dependencies]
+# DB
+sea-orm = { workspace = true, features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid", "with-chrono", "with-json"] }
+sea-orm-migration = { workspace = true, features = ["sqlx-postgres", "runtime-tokio-rustls"] }
+
+# Async
+async-trait = "0.1"
+tokio = { workspace = true }
+
+# IDs / time
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Serde / json
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Errors / logging
+thiserror = { workspace = true }
+tracing = { workspace = true }

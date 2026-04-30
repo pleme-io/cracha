@@ -6,6 +6,7 @@ members = [
     "crates/cracha-controller",
     "crates/cracha-api",
     "crates/cracha-cli",
+    "crates/cracha-storage",
 ]
 
 [workspace.package]
@@ -18,8 +19,17 @@ authors = ["pleme-io <ops@pleme.io>"]
 
 [workspace.dependencies]
 # Local crates
-cracha-core  = { path = "crates/cracha-core",  version = "0.1.0" }
-cracha-proto = { path = "crates/cracha-proto", version = "0.1.0" }
+cracha-core    = { path = "crates/cracha-core",    version = "0.1.0" }
+cracha-proto   = { path = "crates/cracha-proto",   version = "0.1.0" }
+cracha-storage = { path = "crates/cracha-storage", version = "0.1.0" }
+
+# Persistence — SeaORM 1.x + sea-orm-migration. cracha-storage gates the
+# Postgres feature; the controller stays stateless.
+sea-orm           = { version = "1.1", default-features = false }
+sea-orm-migration = { version = "1.1", default-features = false }
+sqlx              = { version = "0.8",  default-features = false }
+uuid              = { version = "1",    features = ["v4", "serde"] }
+chrono            = { version = "0.4",  features = ["serde"] }
 
 # Serialization / errors
 serde = { version = "1", features = ["derive"] }

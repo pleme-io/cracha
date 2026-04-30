@@ -15,7 +15,10 @@ path = "src/main.rs"
 [dependencies]
 cracha-core.workspace = true
 cracha-proto.workspace = true
+cracha-storage.workspace = true
 cracha-controller = { path = "../cracha-controller", version = "0.1.0" }
+chrono.workspace = true
+uuid.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

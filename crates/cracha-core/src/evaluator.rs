@@ -141,6 +141,26 @@ impl AuthzIndex {
         }
         out
     }
+
+    /// Look up a single service by slug and project it into the
+    /// AccessibleService shape (with hostname, location, etc.).
+    /// Used by cracha-api when materialising DB-stored per-user
+    /// grants: the slug names a service in the catalog, this method
+    /// hands back the full row so the response shape stays uniform
+    /// with the declarative `accessible_services` output.
+    ///
+    /// Returns None if no service with that slug exists or if the
+    /// service's cluster has no location mapping.
+    #[must_use]
+    pub fn lookup_service(&self, slug: &str) -> Option<AccessibleService> {
+        let entry = self
+            .catalog
+            .services
+            .iter()
+            .find(|s| s.slug == slug)?;
+        let location = self.catalog.location_for_cluster(&entry.cluster)?;
+        Some(AccessibleService::from_entry(entry, location))
+    }
 }
 
 /// One row of varanda's portal manifest.

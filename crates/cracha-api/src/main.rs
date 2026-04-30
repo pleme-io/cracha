@@ -12,17 +12,24 @@
 // inline. A subsequent revision can split them with a small
 // internal HTTP shim.
 
+mod error;
 mod grpc;
 mod rest;
+mod role;
+mod routes;
+mod state;
 
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use clap::Parser;
 use cracha_controller::{new_shared_index, reconcile, Context};
 use cracha_proto::CrachaServer;
+use cracha_storage::Repo;
 use grpc::CrachaService;
 use kube::Client;
 use rest::RestState;
+use state::ApiState;
 use tracing::info;
 
 #[derive(Parser, Debug)]
@@ -34,6 +41,21 @@ struct Args {
 
     #[arg(long, env = "CRACHA_API_GRPC_ADDR", default_value = "0.0.0.0:50051")]
     grpc_addr: String,
+
+    /// Postgres connection URL for the identity registry. shikumi
+    /// resolves the secret in production; passing here for dev.
+    #[arg(
+        long,
+        env = "CRACHA_DATABASE_URL",
+        default_value = "postgres://cracha:cracha@localhost:5432/cracha"
+    )]
+    database_url: String,
+
+    /// Comma-separated admin emails. Lowercase comparison. Wins admin
+    /// role on first login + every /me lookup. Source of truth is
+    /// shikumi config; CLI flag exists for dev/integration tests.
+    #[arg(long, env = "CRACHA_ADMIN_EMAILS", default_value = "")]
+    admin_emails: String,
 }
 
 #[tokio::main]
@@ -71,10 +93,36 @@ async fn main() -> anyhow::Result<()> {
         }
     });
 
-    // REST server.
+    // DB connect + run pending migrations.
+    let db = cracha_storage::connect(&args.database_url).await?;
+    cracha_storage::migrate(&db).await?;
+    let repo = Repo::new(db);
+
+    // Admin allowlist. shikumi-loaded in prod via env; CLI fallback
+    // covers tests + dev. Lowercase normalisation matches role::compute_role.
+    let admin_emails: HashSet<String> = args
+        .admin_emails
+        .split(',')
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty())
+        .collect();
+    if admin_emails.is_empty() {
+        tracing::warn!("no admin emails configured — no user will get admin role");
+    } else {
+        info!(count = admin_emails.len(), "admin allowlist loaded");
+    }
+
+    // REST server hosts both the legacy /accessible-services route
+    // (consumed by vigia today) and the new auth-flow surfaces
+    // (/me, /users/upsert, /admin/*).
     let rest_addr: std::net::SocketAddr = args.rest_addr.parse()?;
-    let rest_state = Arc::new(RestState { index });
-    let rest_router = rest::router(rest_state);
+    let api_state = Arc::new(ApiState {
+        index: index.clone(),
+        repo,
+        admin_emails,
+    });
+    let rest_router = rest::router(Arc::new(RestState { index: index.clone() }))
+        .merge(routes::wire(api_state));
     let rest_handle = tokio::spawn(async move {
         info!(addr = %rest_addr, "REST server listening");
         let listener = tokio::net::TcpListener::bind(rest_addr).await.unwrap();
