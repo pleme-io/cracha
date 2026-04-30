@@ -12,6 +12,7 @@
 // inline. A subsequent revision can split them with a small
 // internal HTTP shim.
 
+mod auth;
 mod error;
 mod grpc;
 mod rest;
@@ -56,6 +57,18 @@ struct Args {
     /// shikumi config; CLI flag exists for dev/integration tests.
     #[arg(long, env = "CRACHA_ADMIN_EMAILS", default_value = "")]
     admin_emails: String,
+
+    /// passaporte JWKS URL — fetched once at startup, refreshed
+    /// on cache miss. Empty = disable auth middleware (dev/test
+    /// path; every authenticated request returns 401).
+    #[arg(long, env = "CRACHA_JWKS_URL", default_value = "")]
+    jwks_url: String,
+
+    /// Expected `aud` claim value. Empty = audience check disabled
+    /// (dev/test). Production: set to cracha's OIDC client_id from
+    /// the Authentik blueprint.
+    #[arg(long, env = "CRACHA_AUDIENCE", default_value = "")]
+    audience: String,
 }
 
 #[tokio::main]
@@ -112,14 +125,32 @@ async fn main() -> anyhow::Result<()> {
         info!(count = admin_emails.len(), "admin allowlist loaded");
     }
 
+    // JWKS cache + audience for the auth middleware. Empty URL
+    // disables auth (dev/test); auth_middleware short-circuits to
+    // 401 in that case.
+    let jwks = if args.jwks_url.is_empty() {
+        tracing::warn!("no JWKS URL configured — authenticated routes will reject all requests");
+        None
+    } else {
+        info!(url = %args.jwks_url, "JWKS cache configured");
+        Some(auth::jwks::JwksCache::new(args.jwks_url.clone()))
+    };
+    let audience = if args.audience.is_empty() {
+        None
+    } else {
+        Some(args.audience.clone())
+    };
+
     // REST server hosts both the legacy /accessible-services route
     // (consumed by vigia today) and the new auth-flow surfaces
-    // (/me, /users/upsert, /admin/*).
+    // (/me, /admin/*) — the latter run through the JWT middleware.
     let rest_addr: std::net::SocketAddr = args.rest_addr.parse()?;
     let api_state = Arc::new(ApiState {
         index: index.clone(),
         repo,
         admin_emails,
+        jwks,
+        audience,
     });
     let rest_router = rest::router(Arc::new(RestState { index: index.clone() }))
         .merge(routes::wire(api_state));
