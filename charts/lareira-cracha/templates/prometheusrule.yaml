@@ -1,3 +1,4 @@
+{{- if .Values.enabled }}
 {{- if .Values.serviceMonitor.enabled }}
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMRule
@@ -29,4 +30,5 @@ spec:
           annotations:
             summary: "crachá has no policies indexed"
             description: "The crachá-controller hasn't observed any AccessPolicy CRDs. Either none are deployed or the controller has lost cluster connectivity."
+{{- end }}
 {{- end }}
